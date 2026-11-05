@@ -1,0 +1,43 @@
+name: Build Tech en Wat Wat Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'TechEnWatWatAndroid_Source.zip'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Extract Android source project
+        run: |
+          unzip -q TechEnWatWatAndroid_Source.zip -d .
+          test -f TechEnWatWatAndroid/settings.gradle.kts
+
+      - name: Build release APK
+        working-directory: TechEnWatWatAndroid
+        run: gradle --no-daemon :app:assembleRelease
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tech-en-wat-wat-release-apk
+          path: TechEnWatWatAndroid/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 14
